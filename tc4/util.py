@@ -6,6 +6,8 @@ def movechilden(src, dst):
     """Recursively move all children of a directory tree.
 
     Requires both src and dest to exist
+    Replace files with same names in dest
+
     :param src: the source directory
     :param dst: the destination directory
 
@@ -15,6 +17,6 @@ def movechilden(src, dst):
         d = path.join(dst, item)
         if path.isdir(d):
             movechilden(s, d)
+            rmdir(s)
         else:
             move(s, d)
-    rmdir(src)

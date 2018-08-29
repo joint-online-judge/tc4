@@ -11,6 +11,10 @@ class Problem:
         self.zip_file = ZipFile(file)
         # make case insensitive in tc4
         self.canonical_dict = dict((name.lower(), name) for name in self.zip_file.namelist())
+        self.extract_dir = mkdtemp('tc4.zipfile')
+
+    def __del__(self):
+        rmtree(self.extract_dir)
 
     def open(self, name):
         try:
@@ -18,39 +22,37 @@ class Problem:
         except KeyError:
             raise FileNotFoundError(name) from None
 
-    def extract(self, name, dest, subfolder=True):
-        extract_dir = mkdtemp('tc4.zipfile')
+    def extract(self, name, dest):
         file_found = False
-        dirname = path.dirname(name) + '/'
+        head, tail = path.split(name)
 
         if not name.endswith('/'):
             if name.lower() in self.canonical_dict:
                 # single file
-                self.zip_file.extract(self.canonical_dict[name.lower()], path=extract_dir)
                 file_found = True
+                self.zip_file.extract(self.canonical_dict[name.lower()], path=self.extract_dir)
             else:
-                dirname = name + '/'
+                head = name + '/'
+                dest = path.join(dest, tail)
+        else:
+            head += '/'
 
         if not file_found:
-            if dirname.lower() in self.canonical_dict:
+            if head.lower() in self.canonical_dict:
                 # directory
                 file_found = True
                 for compressed_file in self.canonical_dict:
-                    if compressed_file.startswith(dirname.lower()):
-                        self.zip_file.extract(self.canonical_dict[compressed_file], path=extract_dir)
+                    if compressed_file.startswith(head.lower()):
+                        self.zip_file.extract(self.canonical_dict[compressed_file], path=self.extract_dir)
 
         if file_found:
             if not path.isdir(dest):
                 makedirs(dest)
-            if name.endswith('/'):
-                movechilden(path.join(extract_dir, dirname), dest)
-            else:
-                movechilden(path.join(extract_dir, name), dest)
-
-        rmtree(extract_dir)
+            movechilden(path.join(self.extract_dir, head), dest)
 
         if not file_found:
             raise FileNotFoundError(name) from None
+
 
 def load_problem(file):
     return Problem(file)
@@ -60,4 +62,4 @@ def load_problem(file):
 if __name__ == '__main__':
     problem = load_problem('example/test.zip')
     print(problem.canonical_dict)
-    problem.extract('compile', 'example/folder')
+    problem.extract('compile/test/recursive.h', 'example/folder')

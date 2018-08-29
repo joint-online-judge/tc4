@@ -11,7 +11,7 @@ class Problem:
         self.zip_file = ZipFile(file)
         # make case insensitive in tc4
         self.canonical_dict = dict((name.lower(), name) for name in self.zip_file.namelist())
-        self.extract_dir = mkdtemp('tc4.zipfile')
+        self.extract_dir = mkdtemp(prefix='tc4.zipfile.')
 
     def __del__(self):
         rmtree(self.extract_dir)

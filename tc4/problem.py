@@ -64,24 +64,15 @@ class Problem:
             for name, toolchain in data['toolchains']:
                 if name in self.__toolchains:
                     raise ValueError('Toolchain %s redefined' % name) from None
-                self.__toolchains[name] = ToolChain(toolchain)
+                self.__toolchains[name] = ToolChain(self, name, toolchain)
         if 'cases' in data:
             for case in data['cases']:
                 self.cases.append(Case(case))
         self.__config_loaded = filename
 
     def get_toolchain(self, name):
-        if name not in self.__toolchains:
-            raise ValueError('Toolchain %s not found' % name) from None
-        toolchain = self.__toolchains[name]
-        result = list()
-        for tool in toolchain:
-            if tool.type == 'toolchain':
-                result.extend(self.get_toolchain(tool.name))
-            else:
-                result.append(tool)
-        return result
-    
+        return self.__toolchains[name]
+
 
 def load_problem(file):
     return Problem(file)
